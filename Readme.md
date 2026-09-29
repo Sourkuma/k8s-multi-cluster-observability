@@ -9,17 +9,17 @@ The architecture follows a hub-and-spoke model. Secondary (worker) clusters coll
 ```mermaid
 graph TD
     subgraph Secondary Cluster ["Secondary Cluster (e.g., python_production)"]
-        PromSecondary[Prometheus]
-        PromtailSecondary[Promtail]
+        PromSecondary["Prometheus"]
+        PromtailSecondary["Promtail"]
     end
 
     subgraph Primary Cluster ["Primary Cluster (Central Observability)"]
-        PromPrimary[Prometheus Primary]
-        LokiGateway[Loki (SimpleScalable)]
-        Grafana[Grafana Dashboard & Alerting]
+        PromPrimary["Prometheus Primary"]
+        LokiGateway["Loki (SimpleScalable)"]
+        Grafana["Grafana Dashboard & Alerting"]
     end
 
-    CloudStorage[(Azure Blob Storage)]
+    CloudStorage[("Azure Blob Storage")]
 
     PromSecondary -- "Remote Write (Auth)" --> PromPrimary
     PromtailSecondary -- "Push Logs" --> LokiGateway
