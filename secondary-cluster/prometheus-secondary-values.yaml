@@ -1,0 +1,35 @@
+# Lightweight configuration for secondary Prometheus (Agent-like behavior)
+alertmanager:
+  enabled: false
+grafana:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    ruleSelectorNilUsesHelmValues: true
+    serviceMonitorSelectorNilUsesHelmValues: true
+    podMonitorSelectorNilUsesHelmValues: true
+
+    externalLabels:
+      cluster: "worker_cluster_01"
+
+    # --- REMOTE WRITE to Primary Prometheus ---
+    remoteWrite:
+      - url: "https://prometheus.primary.yourdomain.com/api/v1/write"
+        basicAuth:
+          username:
+            name: remote-write-auth # K8s secret containing basic auth user
+            key: user
+          password:
+            name: remote-write-auth # K8s secret containing basic auth pass
+            key: password
+
+    # Short retention (2 days) since data is permanently forwarded to the primary cluster
+    retention: 2d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi

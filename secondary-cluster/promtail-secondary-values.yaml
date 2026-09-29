@@ -1,0 +1,34 @@
+# Promtail config optimized for shipping logs over WAN to the central cluster
+config:
+  clients:
+    - url: https://loki.primary.yourdomain.com/loki/api/v1/push
+      
+      # WAN Optimizations: Reduce batch size to prevent timeouts over the internet
+      batchsize: 524288      # 512KB instead of default 1MB
+      batchwait: 2s          # Wait longer before sending to accumulate smaller batches
+
+      backoff_config:
+        min_period: 1s
+        max_period: 10m
+        max_retries: 20
+      timeout: 30s
+
+  snippets:
+    extraRelabelConfigs:
+      - target_label: cluster
+        replacement: worker_cluster_01
+
+    pipelineStages:
+      - cri: {}
+      # Cost Optimization: Drop noisy system logs to reduce ingress/storage volume
+      - match:
+          selector: '{namespace=~"kube-system|cert-manager"}'
+          action: drop
+          drop_counter_reason: noisy_system_logs
+
+# Ensure Promtail runs on all nodes
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
